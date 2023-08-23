@@ -1,7 +1,5 @@
 #!/usr/bin/python3
-"""
-AirBnB App
-"""
+"""A first api app"""
 
 from flask import Flask, jsonify
 from api.v1.views import app_views
@@ -13,18 +11,14 @@ app.register_blueprint(app_views)
 
 
 @app.errorhandler(404)
-def error_404(error):
-    """
-    handle error
-    """
-    return(jsonify(error="Not found"), 404)
+def invalide_route(e):
+    """Returns a JSON if page not found"""
+    return jsonify({"error": "Not found"}), 404
 
 
 @app.teardown_appcontext
-def remove_session(x=None):
-    """
-    remove the current session
-    """
+def teardown_db(exception):
+    """closes the storage on teardown"""
     storage.close()
 
 

@@ -16,7 +16,7 @@ from models.state import State
 from models.user import User
 import json
 import os
-import pep8
+import pycodestyle
 import unittest
 FileStorage = file_storage.FileStorage
 classes = {"Amenity": Amenity, "BaseModel": BaseModel, "City": City,
@@ -30,17 +30,18 @@ class TestFileStorageDocs(unittest.TestCase):
         """Set up for the doc tests"""
         cls.fs_f = inspect.getmembers(FileStorage, inspect.isfunction)
 
-    def test_pep8_conformance_file_storage(self):
-        """Test that models/engine/file_storage.py conforms to PEP8."""
-        pep8s = pep8.StyleGuide(quiet=True)
-        result = pep8s.check_files(['models/engine/file_storage.py'])
+    def test_pycodestyle_conformance_file_storage(self):
+        """Test that models/engine/file_storage.py conforms to pycodestyle."""
+        pycodestyles = pycodestyle.StyleGuide(quiet=True)
+        result = pycodestyles.check_files(['models/engine/file_storage.py'])
         self.assertEqual(result.total_errors, 0,
                          "Found code style errors (and warnings).")
 
-    def test_pep8_conformance_test_file_storage(self):
-        """Test tests/test_models/test_file_storage.py conforms to PEP8."""
-        pep8s = pep8.StyleGuide(quiet=True)
-        result = pep8s.check_files(['tests/test_models/test_engine/\
+    def test_pycodestyle_conformance_test_file_storage(self):
+        """Test tests/test_models/test_file_storage.py
+        conforms to pycodestyle."""
+        pycodestyles = pycodestyle.StyleGuide(quiet=True)
+        result = pycodestyles.check_files(['tests/test_models/test_engine/\
 test_file_storage.py'])
         self.assertEqual(result.total_errors, 0,
                          "Found code style errors (and warnings).")
@@ -116,19 +117,57 @@ class TestFileStorage(unittest.TestCase):
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_get(self):
-        """tests get method"""
-        call_state = State(name="Texas")
-        models.storage.new(call_state)
-        models.storage.save()
-        obj = models.storage.get('State', call_state.id)
-        self.assertEqual(call_state.id, obj.id)
+        """Test that get properly objects valid class and id"""
+        storage = FileStorage()
+        newcity = City(name="Toulouse", id="idtest_toulouse")
+        newcity.save()
+        result_get = storage.get(City, newcity.id)
+        self.assertEqual(newcity.name, result_get.name)
+        self.assertEqual(newcity.created_at, result_get.created_at)
+        self.assertEqual(newcity.id, result_get.id)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get_bad_id(self):
+        """Test that get properly objects invalid id"""
+        storage = FileStorage()
+        newcity = City(name="Paris", id="idtest_paris")
+        newcity.save()
+        result_get = storage.get(City, "bad_id")
+        self.assertIsNone(result_get)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get_bad_id(self):
+        """Test that get properly objects invalid class"""
+        storage = FileStorage()
+        newcity = City(name="Bordeaux", id="idtest_bordeaux")
+        newcity.save()
+        result_get = storage.get(State, "idtest_bordeaux")
+        self.assertIsNone(result_get)
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_count(self):
-        """test count method"""
-        all_objs = models.storage.count('City')
-        city_obj = City(name="Sacramento")
-        models.storage.new(city_obj)
-        models.storage.save()
-        new_objs = models.storage.count('City')
-        self.assertEqual(all_objs + 1, new_objs)
+        """Test all count for class city"""
+        storage = FileStorage()
+        test_len = len(storage.all("City"))
+        newcity = City(name="Agen")
+        newcity.save()
+        self.assertEqual(test_len + 1, storage.count("City"))
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count_all(self):
+        """Test all count """
+        storage = FileStorage()
+        len_old = len(storage.all())
+        newcity = City(name="Brest")
+        newcity.save()
+        len_now = len(storage.all())
+        self.assertEqual(len_old + 1, len_now)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count_class(self):
+        """Test all count for class city"""
+        storage = FileStorage()
+        test_len = len(storage.all("City"))
+        newcity = City(name="Agen")
+        newcity.save()
+        self.assertEqual(test_len + 1, storage.count("City"))
